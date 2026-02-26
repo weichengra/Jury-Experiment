@@ -1,0 +1,684 @@
+{{ extends "global/Page.html" }}
+{{ block title }} {{ endblock }}
+
+{{ block styles }}
+<style>
+    /* 整體頁面基準字體 */
+    .frand-wrapper {
+        font-family: 'Times New Roman', serif;
+        font-size: 18px;
+        text-align: left;
+        line-height: 1.6;
+    }
+
+    /* 一般說明文字 */
+    .frand-text {
+        font-size: 20px;
+    }
+
+    /* slider 刻度與目前值 */
+    .frand-scale {
+        font-size: 18px;
+    }
+    
+    /* 問題標籤（題目文字）的字體大小 */
+    .control-label,
+    .form-group > label,
+    .form-group label,
+    label[for^="id_post_survey"],
+    label[for^="id_frand"],
+    .otree-form-group label,
+    .field > label {
+        font-family: 'Times New Roman', serif !important;
+        font-size: 20px !important;
+        font-weight: normal !important;
+        line-height: 1.6 !important;
+        margin-bottom: 15px !important;
+        display: block !important;
+    }
+    
+    /* Slider 容器間距調整 */
+    .slider-container {
+        margin: 10px 0 !important;
+    }
+    
+    /* Slider wrapper（包含tooltip和slider） */
+    .slider-wrapper {
+        position: relative;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 確保datalist不佔空間 */
+    datalist {
+        display: none !important;
+    }
+    
+    /* Slider 刻度標籤位置 */
+    .slider-container .slider-ticks {
+        position: relative !important;
+        width: 100% !important;
+        margin: 0 0 10px 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        height: 20px !important;
+    }
+    
+    .slider-container .slider-ticks span {
+        position: absolute !important;
+        font-size: 18px !important;
+        color: #666 !important;
+        text-align: center !important;
+        line-height: 1 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transform: translateX(-50%) !important;
+    }
+    
+    /* 精確對齊每個刻度標籤到格線位置 */
+    .slider-container .slider-ticks span:nth-child(1) { left: 0% !important; }
+    .slider-container .slider-ticks span:nth-child(2) { left: 25% !important; }
+    .slider-container .slider-ticks span:nth-child(3) { left: 50% !important; }
+    .slider-container .slider-ticks span:nth-child(4) { left: 75% !important; }
+    .slider-container .slider-ticks span:nth-child(5) { left: 100% !important; }
+    
+    /* Slider 拖動點上方的數值顯示 */
+    .slider-tooltip {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #999;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: bold;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 1;
+        transition: background 0.2s, border-bottom-color 0.2s;
+        z-index: 10;
+    }
+    
+    .slider-tooltip::after {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: #999;
+        transition: border-bottom-color 0.2s;
+    }
+    
+    /* 拖動中狀態：淺藍色（未確認狀態） */
+    .slider-tooltip.dragging {
+        background: #e7f3ff;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+    
+    .slider-tooltip.dragging::after {
+        border-bottom-color: #e7f3ff;
+    }
+    
+    /* 拖動後狀態：深藍底白字 */
+    .slider-tooltip.active {
+        background: #007bff;
+    }
+    
+    .slider-tooltip.active::after {
+        border-bottom-color: #007bff;
+    }
+    
+    /* Slider 格線標記 */
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 16px;
+        border-radius: 5px;
+        background-color: #ddd;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #007bff;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #007bff;
+        cursor: pointer;
+        border: none;
+        position: relative;
+        z-index: 2;
+    }
+    
+    input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 16px;
+        background-color: #ddd;
+        background-repeat: no-repeat;
+        background-image: 
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%);
+        background-size: 
+            3px 16px, 3px 16px, 3px 16px, 3px 16px, 3px 16px,
+            1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px,
+            1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px,
+            1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px;
+        background-position: 
+            0% center, 25% center, 50% center, 75% center, 100% center,
+            5% center, 10% center, 15% center, 20% center, 30% center,
+            35% center, 40% center, 45% center, 55% center, 60% center,
+            65% center, 70% center, 80% center, 85% center, 90% center, 95% center;
+        border-radius: 5px;
+    }
+    
+    input[type="range"]::-moz-range-track {
+        width: 100%;
+        height: 16px;
+        background-color: #ddd;
+        background-repeat: no-repeat;
+        background-image: 
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            linear-gradient(to bottom, #999 0%, #999 100%);
+        background-size: 
+            3px 16px, 3px 16px, 3px 16px, 3px 16px, 3px 16px,
+            1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px,
+            1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px,
+            1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px, 1px 16px;
+        background-position: 
+            2% center, 27% center, 52% center, 77% center, 102% center,
+            7% center, 12% center, 17% center, 22% center, 32% center,
+            37% center, 42% center, 47% center, 57% center, 62% center,
+            67% center, 72% center, 82% center, 87% center, 92% center, 97% center;
+        border-radius: 5px;
+    }
+    
+    /* 調整選項（radio/checkbox）之間的垂直間距 */
+    .form-check {
+        margin-bottom: 20px !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    
+    /* 調整選項文字與按鈕的對齊 */
+    .form-check-input {
+        margin-top: 0.25rem;
+    }
+    
+    /* 選項文字行高 */
+    .form-check-label {
+        line-height: 1.6;
+        padding-left: 8px;
+    }
+    
+    /* 未填寫題目的紅色邊框樣式 */
+    .question-error {
+        border: 2px solid #dc3545 !important;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #fff5f5;
+    }
+    
+    /* 警告訊息樣式 */
+    .post-survey-warning {
+        font-family: 'Times New Roman', serif;
+        font-size: 18px;
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin: 20px 0;
+        display: none;
+        font-weight: bold;
+    }
+    
+    .post-survey-warning.show {
+        display: block;
+    }
+</style>
+{{ endblock }}
+
+{{ block content }}
+
+<div id="post-survey-warning" class="post-survey-warning">
+    ⚠ Please answer all questions before continuing.
+</div>
+
+<div class="frand-wrapper">
+    <div>
+        <p class="frand-text">
+            During jury discussion, some jurors noted that the German court ruled against PhoneMaker, 
+            suggesting that NextGen may have a stronger case and therefore might deserve a higher FRAND rate.
+        </p>
+    </div>
+
+    <br><br>
+
+    <!-- Integrated: FRANDCHANGE02 slider -->
+    <p class="frand-text" style="margin-top:16px;">
+    Please re-answer the question below, making changes only if necessary.
+    <br><br>
+    Based on your evaluation of the evidence above and the jury instructions,
+    what is the most appropriate FRAND rate ($ per device)?
+    <br><br>
+    <span style="color: red; font-weight: bold;">
+        You previously picked {{ previous_frand }}.
+    </span>
+</p>
+
+
+    <div class="slider-container" style="margin: 20px 0;">
+        <!-- 刻度標籤 -->
+        <div class="slider-ticks frand-scale">
+            <span>$0</span>
+            <span>$5</span>
+            <span>$10</span>
+            <span>$15</span>
+            <span>$20</span>
+        </div>
+        
+        {{ formfield 'frand_rate_revised' }}
+        
+        <!-- 隱藏的歷史紀錄欄位 -->
+        <div style="display: none;">
+            {{ formfield 'frand_rate_revised_history' }}
+        </div>
+    </div>
+
+    <br><br>
+    
+    <div style="margin-bottom: 40px; border-top: 2px solid #ccc; padding-top: 20px;"> 
+
+    <!-- Integrated: WHY FRAND CHANGED explanation field -->
+    <div style="margin-top:16px;">
+        <p class="frand-text"></p>
+        {{ formfield 'post_survey_followup_q1' }}
+    </div>
+</div>
+
+<!-- reCAPTCHA Script -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<script>
+    function onRecaptchaSuccess(token) {
+        document.getElementById('id_recaptcha_response').value = token;
+        
+        // 移除 reCAPTCHA 的錯誤樣式
+        const recaptchaContainer = document.querySelector('.g-recaptcha');
+        if (recaptchaContainer && recaptchaContainer.parentElement) {
+            recaptchaContainer.parentElement.classList.remove('question-error');
+        }
+        
+        // 檢查是否還有其他未填寫的題目
+        const warning = document.getElementById('post-survey-warning');
+        const hasAnyError = document.querySelector('.question-error');
+        if (!hasAnyError && warning) {
+            warning.classList.remove('show');
+            warning.style.display = 'none';
+        }
+    }
+</script>
+
+<div style="margin: 20px 0;">
+    <!-- Google reCAPTCHA Widget -->
+    <!-- Using Google's Test Site Key. Replace '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' with your actual Site Key in production. -->
+    <!-- 注意：正式上線跑實驗時，請去 Google reCAPTCHA 官網申請免費的金鑰，並替換掉下方的 data-sitekey -->
+    <div class="g-recaptcha" 
+         data-sitekey="6LcGaDUsAAAAAHyj869iJQOmYB1jihzwku1Ffbxt"
+         data-callback="onRecaptchaSuccess">
+    </div>
+</div>
+
+<!-- Hidden input to store the reCAPTCHA token for oTree validation -->
+<input type="hidden" name="recaptcha_response" id="id_recaptcha_response">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const STEP_SIZE = 0.1;
+    
+    function snapToStep(value) {
+        return Math.round(value / STEP_SIZE) * STEP_SIZE;
+    }
+    
+    const numberInput = document.querySelector('input[name="frand_rate_revised"]');
+    const historyInput = document.querySelector('textarea[name="frand_rate_revised_history"]');
+    
+    if (!numberInput) return;
+
+    let sliderMoved = false;
+    
+    // 移除 slider 錯誤樣式的統一函數
+    function removeSliderError() {
+        const sliderContainer = document.querySelector('.slider-container');
+        if (sliderContainer) {
+            sliderContainer.classList.remove('question-error');
+        }
+        
+        // 檢查是否還有其他未填寫的題目
+        const warning = document.getElementById('post-survey-warning');
+        const hasAnyError = document.querySelector('.question-error');
+        if (!hasAnyError && warning) {
+            warning.classList.remove('show');
+            warning.style.display = 'none';
+        }
+    }
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'slider-wrapper';
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'slider-tooltip';
+    tooltip.textContent = '$0.0';
+    
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '20';
+    slider.step = String(STEP_SIZE);
+    slider.setAttribute('list', 'tickmarks-revised');
+    slider.style.width = '100%';
+    slider.style.margin = '0';
+    slider.style.padding = '0';
+    slider.style.cursor = 'pointer';
+    slider.style.transition = 'all 0.1s ease';
+    
+    const datalist = document.createElement('datalist');
+    datalist.id = 'tickmarks-revised';
+    const tickValues = [5, 10, 15];
+    tickValues.forEach(function(val) {
+        const option = document.createElement('option');
+        option.value = val;
+        datalist.appendChild(option);
+    });
+    
+    function updateTooltipPosition(value) {
+        const min = parseFloat(slider.min);
+        const max = parseFloat(slider.max);
+        const thumbWidth = 20;
+        const trackWidth = slider.offsetWidth;
+        
+        const percent = (value - min) / (max - min);
+        const offset = thumbWidth / 2;
+        const availableWidth = trackWidth - thumbWidth;
+        const pixelPosition = offset + (percent * availableWidth);
+        
+        tooltip.style.left = pixelPosition + 'px';
+        tooltip.textContent = '$' + value.toFixed(1);
+    }
+    
+    let record = '';
+    let lastValue = '';
+    let isFirstInteraction = true;
+    let isDragging = false;
+    
+    // 從 previous_frand 提取數值並設定為初始值
+    const previousFrandText = '{{ previous_frand }}';
+    const previousFrandMatch = previousFrandText.match(/[\d.]+/);
+    const previousFrandValue = previousFrandMatch ? parseFloat(previousFrandMatch[0]) : 0;
+    const snappedInitialValue = snapToStep(previousFrandValue);
+    
+    slider.value = snappedInitialValue;
+    numberInput.value = snappedInitialValue.toFixed(1);
+    updateTooltipPosition(snappedInitialValue);
+    tooltip.textContent = '$' + snappedInitialValue.toFixed(1);
+    
+    if (historyInput) {
+        historyInput.value = '';
+    }
+    
+    slider.onmousedown = function() {
+        isDragging = true;
+        sliderMoved = true;  // 標記為已移動（點擊時）
+        removeSliderError();  // 移除錯誤樣式
+        tooltip.classList.remove('active');
+        tooltip.classList.add('dragging');
+    };
+    
+    slider.ontouchstart = function() {
+        isDragging = true;
+        sliderMoved = true;  // 標記為已移動（觸摸時）
+        removeSliderError();  // 移除錯誤樣式
+        tooltip.classList.remove('active');
+        tooltip.classList.add('dragging');
+    };
+    
+    slider.onclick = function() {
+        sliderMoved = true;  // 標記為已移動（點擊軌道時）
+        removeSliderError();  // 移除錯誤樣式
+    };
+    
+    slider.oninput = function() {
+        const rawValue = parseFloat(this.value);
+        const snappedValue = snapToStep(rawValue);
+        
+        updateTooltipPosition(snappedValue);
+        sliderMoved = true;  // 標記為已移動（拖動時）
+        removeSliderError();  // 移除錯誤樣式
+    };
+    
+    slider.onchange = function() {
+        const snappedValue = snapToStep(parseFloat(this.value));
+        this.value = snappedValue;
+        const value = snappedValue.toFixed(1);
+        
+        updateTooltipPosition(snappedValue);
+        tooltip.classList.remove('dragging');
+        tooltip.classList.add('active');
+        
+        numberInput.value = value;
+        
+        if (value !== lastValue) {
+            if (isFirstInteraction) {
+                record = value;
+                isFirstInteraction = false;
+            } else {
+                record += ',' + value;
+            }
+            if (historyInput) {
+                historyInput.value = record;
+            }
+            lastValue = value;
+        }
+        
+        isDragging = false;
+        numberInput.setCustomValidity('');
+    };
+    
+    slider.onmouseup = function() {
+        if (isDragging) {
+            this.onchange();
+        }
+    };
+    
+    slider.ontouchend = function() {
+        if (isDragging) {
+            this.onchange();
+        }
+    };
+    
+    wrapper.appendChild(tooltip);
+    wrapper.appendChild(slider);
+    wrapper.appendChild(datalist);
+    
+    numberInput.style.display = 'none';
+    numberInput.parentNode.insertBefore(wrapper, numberInput.nextSibling);
+    
+    // 元素插入 DOM 後，重新更新 tooltip 位置以確保正確對齊
+    setTimeout(function() {
+        updateTooltipPosition(snappedInitialValue);
+    }, 0);
+    
+    // 表單提交驗證
+    const form = document.querySelector('form');
+    const warning = document.getElementById('post-survey-warning');
+    
+    if (form) {
+        // 禁用 HTML5 原生驗證
+        form.setAttribute('novalidate', 'novalidate');
+        
+        // 移除所有輸入欄位的 required 屬性
+        form.querySelectorAll('input, textarea, select').forEach(function(input) {
+            input.removeAttribute('required');
+        });
+        
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            let firstErrorField = null;
+            
+            // 先移除所有錯誤樣式
+            document.querySelectorAll('.question-error').forEach(function(el) {
+                el.classList.remove('question-error');
+            });
+            
+            // 檢查 slider 是否移動
+            if (!sliderMoved) {
+                hasError = true;
+                const sliderContainer = document.querySelector('.slider-container');
+                if (sliderContainer) {
+                    sliderContainer.classList.add('question-error');
+                    if (!firstErrorField) {
+                        firstErrorField = sliderContainer;
+                    }
+                }
+            }
+            
+            // 檢查 post_survey_followup_q1 textarea
+            const followupTextarea = form.querySelector('textarea[name="post_survey_followup_q1"]');
+            if (followupTextarea && (!followupTextarea.value || followupTextarea.value.trim() === '')) {
+                hasError = true;
+                let container = followupTextarea.closest('.form-group');
+                if (!container) container = followupTextarea.closest('.mb-3');
+                if (!container) container = followupTextarea.closest('.otree-form-group');
+                if (!container) container = followupTextarea.closest('div[style*="margin"]');
+                if (!container) container = followupTextarea.parentElement;
+                
+                if (container) {
+                    container.classList.add('question-error');
+                    if (!firstErrorField) {
+                        firstErrorField = container;
+                    }
+                }
+            }
+            
+            // 檢查 reCAPTCHA
+            const recaptchaResponse = document.getElementById('id_recaptcha_response');
+            if (!recaptchaResponse || !recaptchaResponse.value || recaptchaResponse.value.trim() === '') {
+                hasError = true;
+                const recaptchaContainer = document.querySelector('.g-recaptcha');
+                if (recaptchaContainer && recaptchaContainer.parentElement) {
+                    recaptchaContainer.parentElement.classList.add('question-error');
+                    if (!firstErrorField) {
+                        firstErrorField = recaptchaContainer.parentElement;
+                    }
+                }
+            }
+            
+            // 如果有錯誤，阻止提交並顯示警告
+            if (hasError) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // 顯示警告訊息
+                if (warning) {
+                    warning.classList.add('show');
+                    warning.style.display = 'block';
+                }
+                
+                // 捲動到第一個錯誤的題目
+                if (firstErrorField) {
+                    setTimeout(function() {
+                        const yOffset = -120;
+                        const y = firstErrorField.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                    }, 100);
+                }
+                
+                return false;
+            }
+        }, true);
+        
+        // 監聽 textarea 輸入
+        form.addEventListener('input', function(e) {
+            const target = e.target;
+            if (target && target.name === 'post_survey_followup_q1') {
+                if (target.value && target.value.trim() !== '') {
+                    let container = target.closest('.question-error');
+                    if (container) {
+                        container.classList.remove('question-error');
+                    }
+                    
+                    // 檢查是否還有其他未填寫的題目
+                    const hasAnyError = document.querySelector('.question-error');
+                    if (!hasAnyError && warning) {
+                        warning.classList.remove('show');
+                        warning.style.display = 'none';
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+{{ next_button }}
+
+{{ endblock }}
