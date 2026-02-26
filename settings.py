@@ -46,7 +46,7 @@ ALLOWED_HOSTS = ['*']  # 允許所有主機（Heroku 部署需要）
 
 # Production vs Development mode
 OTREE_PRODUCTION = environ.get('OTREE_PRODUCTION') not in {None, '', '0'}
-DEBUG = not OTREE_PRODUCTION  # 開發模式顯示 Debug，生產環境自動隱藏
+DEBUG = False  # 永久隱藏 debug 資訊（包含本地開發）
 INSTALLED_APPS = ['otree']
 
 # 限制桌面端填寫（最小寬度1024px）
