@@ -40,10 +40,6 @@ def creating_session(subsession: Subsession):
         else:
             p.assigned_study = 2
             p.assigned_treatment = position_in_cycle - 2
-        # 設定清楚的study_condition標示
-        study_name = f"Study {p.assigned_study}"
-        treatment_name = "Simple" if p.assigned_treatment == 0 else "Complex"
-        p.study_condition = f"{study_name} - {treatment_name}"
       
         p.participant.vars['assigned_study'] = p.assigned_study
         p.participant.vars['assigned_treatment'] = p.assigned_treatment
@@ -52,7 +48,6 @@ def creating_session(subsession: Subsession):
 class Player(BasePlayer):
     assigned_study = models.IntegerField()  # 1=Study1, 2=Study2
     assigned_treatment = models.IntegerField()  # 0=Simple, 1=Complex
-    study_condition = models.StringField()  # 清楚標示：例如 "Study 1 - Simple"
 
 class RoutePage(Page):
     """路由頁面"""
