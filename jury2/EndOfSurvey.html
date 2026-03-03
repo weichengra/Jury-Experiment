@@ -152,21 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-    // Prolific 自動重定向
+    // Prolific 自動重定向 - 在頁面載入時立即執行（表示資料已提交完成）
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        if (form) {
-            const originalSubmit = form.onsubmit;
-            form.addEventListener('submit', function(e) {
-                const recaptchaResponse = document.getElementById('id_recaptcha_response');
-                // 檢查 reCAPTCHA 是否完成
-                if (recaptchaResponse && recaptchaResponse.value && recaptchaResponse.value.trim() !== '') {
-                    // reCAPTCHA 已完成，允許提交並在提交後重定向
-                    setTimeout(function() {
-                        window.location.href = "{{ session.config.prolific_completion_url }}";
-                    }, 500);
-                }
-            });
+        // 檢查是否有 prolific_completion_url
+        const prolificUrl = "{{ session.config.prolific_completion_url }}";
+        if (prolificUrl && prolificUrl !== "" && prolificUrl.includes('prolific')) {
+            // 延遲 2 秒後自動重定向到 Prolific
+            setTimeout(function() {
+                window.location.href = prolificUrl;
+            }, 2000);
         }
     });
 </script>
