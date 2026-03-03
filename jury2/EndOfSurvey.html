@@ -151,6 +151,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+    // Prolific 自動重定向
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (form) {
+            const originalSubmit = form.onsubmit;
+            form.addEventListener('submit', function(e) {
+                const recaptchaResponse = document.getElementById('id_recaptcha_response');
+                // 檢查 reCAPTCHA 是否完成
+                if (recaptchaResponse && recaptchaResponse.value && recaptchaResponse.value.trim() !== '') {
+                    // reCAPTCHA 已完成，允許提交並在提交後重定向
+                    setTimeout(function() {
+                        window.location.href = "{{ session.config.prolific_completion_url }}";
+                    }, 500);
+                }
+            });
+        }
+    });
+</script>
+
 {{ next_button }}
 
 {{ endblock }}
