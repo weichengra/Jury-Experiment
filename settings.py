@@ -25,10 +25,14 @@ SESSION_CONFIGS = [
     ),
 ]
 
+# Prolific 完成重定向設定
+PROLIFIC_COMPLETION_CODE = environ.get('PROLIFIC_COMPLETION_CODE', 'C105YIDJ')
+
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=1.00,
     participation_fee=0.00,
-    doc=""
+    doc="",
+    prolific_completion_url=f"https://app.prolific.com/submissions/complete?cc={PROLIFIC_COMPLETION_CODE}"
 )
 
 PARTICIPANT_FIELDS = []
