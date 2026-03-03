@@ -1,0 +1,33 @@
+{{ extends "global/Page.html" }}
+{{ block title }}Exit Instruction{{ endblock }}
+
+{{ block content }}
+<!-- 
+此檔案功能：顯示退出研究的說明
+這是 oTree 的 Page 模板，用於顯示資訊頁面
+-->
+
+<!-- ========== 以下為敘述問題文字部分，可自行修改 ========== -->
+<div style="text-align: left; font-size: 16px; line-height: 1.6;">
+    <p><strong>Notice: Comprehension Check Not Passed</strong></p>
+
+    <p>Thank you for your time.</p>
+
+    <p>
+        Unfortunately, you did not answer the comprehension questions correctly after two attempts.
+        As a result, the researcher kindly asks that you end your participation in this study.
+    </p>
+
+    <p>
+        To do so, please close this survey and click 'Cancel participation' on Prolific.
+        This will return your submission without affecting your approval rating.
+</p>
+
+    <p>We appreciate your interest and thank you again for your time.</p>
+</div>
+<!-- ========== 以上為敘述問題文字部分 ========== -->
+
+{{ next_button }}
+
+{{ endblock }}
+
