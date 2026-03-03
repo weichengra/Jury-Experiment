@@ -123,6 +123,24 @@
     });
 </script>
 
+<script>
+    // Prolific 自動重定向
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // 檢查 reCAPTCHA 是否完成
+                if (typeof grecaptcha !== 'undefined' && grecaptcha.getResponse() !== "") {
+                    // reCAPTCHA 已完成，允許提交並在提交後重定向
+                    setTimeout(function() {
+                        window.location.href = "{{ session.config.prolific_completion_url }}";
+                    }, 500);
+                }
+            });
+        }
+    });
+</script>
+
 {{ next_button }}
 
 {{ endblock }}
