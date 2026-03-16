@@ -1,0 +1,104 @@
+{{ extends "global/Page.html" }}
+{{ block title }}<b>End of Survey</b>{{ endblock }}
+
+{{ block content }}
+
+<style>
+  /* 頁面標題大小與置中 */
+  .otree-title {
+      text-align: center;
+      font-family: 'Times New Roman', serif;
+      font-size: 30px;
+      font-weight: bold;
+  }
+
+  /* 內文文字大小 */
+  .end-text {
+      font-family: 'Times New Roman', serif;
+      font-size: 20px;
+      line-height: 1.6;
+      text-align: left;
+  }
+</style>
+
+<br><br>
+
+<!-- ========== 以下為敘述問題文字部分，可自行修改 ========== -->
+<p class="end-text">
+    Thank you very much for your participation in this study.
+    <br>
+    Please click the button below to complete and submit the survey.
+</p>
+<!-- ========== 以上為敘述問題文字部分 ========== -->
+
+<br><br>
+
+<!-- reCAPTCHA Section -->
+
+<!-- reCAPTCHA Script -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+    function onRecaptchaSuccess(token) {
+        document.getElementById('id_recaptcha_response').value = token;
+        const recaptchaContainer = document.querySelector('.g-recaptcha');
+        if (recaptchaContainer && recaptchaContainer.parentElement) {
+            recaptchaContainer.parentElement.classList.remove('question-error');
+        }
+    }
+</script>
+
+<div style="margin: 8px 0;">
+    <div class="g-recaptcha"
+         data-sitekey="6LcGaDUsAAAAAHyj869iJQOmYB1jihzwku1Ffbxt"
+         data-callback="onRecaptchaSuccess">
+    </div>
+</div>
+<input type="hidden" name="recaptcha_response" id="id_recaptcha_response">
+
+<br>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            let firstErrorField = null;
+
+            // 檢查 reCAPTCHA
+            const recaptchaResponse = document.getElementById('id_recaptcha_response');
+            if (!recaptchaResponse || !recaptchaResponse.value || recaptchaResponse.value.trim() === '') {
+                hasError = true;
+                const recaptchaContainer = document.querySelector('.g-recaptcha');
+                if (recaptchaContainer && recaptchaContainer.parentElement) {
+                    recaptchaContainer.parentElement.classList.add('question-error');
+                    if (!firstErrorField) {
+                        firstErrorField = recaptchaContainer.parentElement;
+                    }
+                }
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                if (firstErrorField) {
+                    setTimeout(function() {
+                        const yOffset = -120;
+                        const y = firstErrorField.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                    }, 100);
+                }
+                return false;
+            }
+        }, true);
+    }
+});
+</script>
+
+{{ next_button }}
+
+{{ endblock }}
+
+
+

@@ -1,0 +1,95 @@
+{{ extends "global/Page.html" }}
+{{ block title }}<b>Thank You</b>{{ endblock }}
+
+{{ block content }}
+
+<style>
+  .thank-you-container {
+      text-align: center;
+      font-family: 'Times New Roman', serif;
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: 0 auto;
+  }
+  
+  .thank-you-title {
+      font-size: 32px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 30px;
+  }
+  
+  .thank-you-message {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #34495e;
+      margin-bottom: 30px;
+  }
+  
+  .redirect-info {
+      font-size: 24px;
+      font-weight: bold;
+      color: #27ae60;
+      padding: 20px;
+      background-color: #d5f4e6;
+      border-radius: 10px;
+      margin: 30px 0;
+  }
+  
+  .countdown {
+      font-size: 36px;
+      color: #e74c3c;
+  }
+</style>
+
+<div class="thank-you-container">
+    <div class="thank-you-title">
+        🎉 Thank You for Your Participation! 🎉
+    </div>
+    
+    <div class="thank-you-message">
+        Your responses have been successfully recorded.<br>
+        We greatly appreciate the time and effort you dedicated to this study.
+    </div>
+    
+    <div class="redirect-info">
+        Redirecting you to Prolific in <span class="countdown" id="countdown">3</span> seconds...
+    </div>
+    
+    <div class="thank-you-message">
+        Please do not close this window.
+    </div>
+</div>
+
+{{ endblock }}
+
+{{ block scripts }}
+<script>
+    (function() {
+        const prolificUrl = "{{ prolific_url }}";
+        
+        if (prolificUrl && prolificUrl.includes('prolific')) {
+            let countdown = 4;
+            const countdownElement = document.getElementById('countdown');
+            
+            const countdownInterval = setInterval(function() {
+                countdown--;
+                if (countdownElement) {
+                    countdownElement.textContent = countdown;
+                }
+                if (countdown <= 1) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+            
+            setTimeout(function() {
+                window.location.href = prolificUrl;
+            }, 3000);
+        } else {
+            // 如果沒有 Prolific URL，顯示訊息
+            document.querySelector('.redirect-info').innerHTML = 
+                'Thank you! You may now close this window.';
+        }
+    })();
+</script>
+{{ endblock }}
