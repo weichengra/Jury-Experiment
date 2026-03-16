@@ -1,0 +1,26 @@
+{{ extends "global/Page.html" }}
+{{ block title }} <b>Success</b> {{ endblock }}
+
+{{ block content }}
+
+<style>
+  /* 讓頁面標題 Success 置中 */
+  .otree-title {
+      text-align: center;
+      font-family: 'Times New Roman', serif;
+      font-size: 30px;
+      font-weight: bold;
+  }
+</style>
+
+<br><br>
+
+<p style="font-size:18px;">
+    Congratulations! You have answered all of the comprehension questions correctly.
+</p>
+
+<br><br>
+
+{{ next_button }}
+
+{{ endblock }}

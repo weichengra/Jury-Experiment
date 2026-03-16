@@ -1,0 +1,1429 @@
+{{ extends "global/Page.html" }}
+{{ block title }}{{ endblock }}
+
+{{ block styles }}
+<style>
+    /* 調整題目之間的間距 */
+    .form-group,
+    .mb-3,
+    .otree-form-group {
+        margin-bottom: 100px !important;
+    }
+    
+    /* 問題標籤（題目文字）的字體大小 */
+    .control-label,
+    .form-group > label,
+    .form-group label,
+    label[for^="id_evidence"],
+    label[for^="id_negotiate"],
+    .otree-form-group label,
+    .field > label {
+        font-family: 'Times New Roman', serif !important;
+        font-size: 20px !important;      /* 問題標題字體大小 */
+        font-weight: normal !important;
+        line-height: 1.6 !important;
+        margin-bottom: 15px !important;
+        display: block !important;
+    }
+    
+    /* 大卡片式按鈕設計 */
+    .form-check {
+        border: 3px solid #ddd;
+        padding: 25px 30px;
+        border-radius: 12px;
+        margin-bottom: 40px !important;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #fff;
+        position: relative;
+    }
+    
+    .form-check:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    }
+    
+    /* 確保卡片內的選項文字不受問題標籤規則影響 */
+    .form-check label {
+        cursor: pointer;
+        font-size: 18px !important;       /* 選項文字大小（從 16px 調整為 18px）*/
+        margin: 0;
+        padding-left: 10px;
+        font-weight: 500 !important;
+        color: #333;
+        transition: color 0.3s ease;
+        line-height: 1.6 !important;
+        display: inline !important;
+    }
+    
+    .form-check input[type="radio"] {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        margin-right: 12px;
+        vertical-align: middle;
+    }
+    
+    /* 選中狀態的卡片樣式 */
+    .form-check:has(input:checked) {
+        border-color: #007bff;
+        background-color: #e7f3ff;
+        box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
+    }
+    
+    .form-check input:checked ~ label {
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    /* 調整選項文字與按鈕的對齊 */
+    .form-check-input {
+        margin-top: 0.25rem;
+    }
+    
+    /* 選項文字行高 */
+    .form-check-label {
+        line-height: 1.6;
+        padding-left: 8px;
+    }
+    
+    /* 未填寫題目的紅色邊框樣式 */
+    .question-error {
+        border: 2px solid #dc3545 !important;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #fff5f5;
+    }
+    
+    /* 警告訊息樣式 */
+    .main-study-warning {
+        font-family: 'Times New Roman', serif;
+        font-size: 18px;
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin: 20px 0;
+        display: none;
+        font-weight: normal;
+    }
+    
+    .main-study-warning.show {
+        display: block;
+    }
+    
+    /* Slider 容器間距調整 */
+    .slider-container {
+        margin: 10px 0 !important;  /* 減少上下間距 */
+    }
+    
+    /* Slider wrapper（包含tooltip和slider） */
+    .slider-wrapper {
+        position: relative;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 確保datalist不佔空間 */
+    datalist {
+        display: none !important;
+    }
+    
+    /* Slider 刻度標籤位置 */
+    .slider-container .slider-ticks {
+        position: relative !important;
+        width: 100% !important;
+        margin: 0 0 2px 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        height: 20px !important;
+    }
+    
+    .slider-container .slider-ticks span {
+        position: absolute !important;
+        font-size: 18px !important;
+        color: #666 !important;
+        text-align: center !important;
+        line-height: 1 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transform: translateX(-50%) !important;
+    }
+    
+    /* 精確對齊每個刻度標籤到格線位置 */
+    .slider-container .slider-ticks span:nth-child(1) { left: 0% !important; }
+    .slider-container .slider-ticks span:nth-child(2) { left: 25% !important; }
+    .slider-container .slider-ticks span:nth-child(3) { left: 50% !important; }
+    .slider-container .slider-ticks span:nth-child(4) { left: 75% !important; }
+    .slider-container .slider-ticks span:nth-child(5) { left: 100% !important; }
+    
+    /* Slider 當前值顯示位置 */
+    .slider-container .slider-value-display {
+        display: none !important;
+    }
+    
+    /* Slider 拖動點上方的數值顯示 */
+    .slider-tooltip {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #007bff;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: normal;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 1;
+        transition: opacity 0.2s;
+        z-index: 10;
+    }
+    
+    .slider-tooltip::after {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: #007bff;
+    }
+    
+    .slider-tooltip.active {
+        opacity: 1;
+    }
+    
+    /* 拖動中狀態：淺藍色（未確認狀態） */
+    .slider-tooltip.dragging {
+        background: #e7f3ff;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+    
+    /* Slider 格線標記 */
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 16px;
+        border-radius: 5px;
+        background-color: #ddd;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #007bff;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #007bff;
+        cursor: pointer;
+        border: none;
+        position: relative;
+        z-index: 2;
+    }
+    
+    input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 16px;
+        background-color: #ddd;
+        background-repeat: no-repeat;
+        background-image: 
+            /* 粗線 - $0 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $5 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $10 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $15 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $20 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 細線 - $1 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $2 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $3 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $4 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $6 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $7 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $8 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $9 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $11 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $12 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $13 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $14 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $16 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $17 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $18 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $19 */
+            linear-gradient(to bottom, #999 0%, #999 100%);
+        background-size: 
+            3px 16px,  /* $0 粗線 */
+            3px 16px,  /* $5 粗線 */
+            3px 16px,  /* $10 粗線 */
+            3px 16px,  /* $15 粗線 */
+            3px 16px,  /* $20 粗線 */
+            1px 16px,  /* $1 細線 */
+            1px 16px,  /* $2 細線 */
+            1px 16px,  /* $3 細線 */
+            1px 16px,  /* $4 細線 */
+            1px 16px,  /* $6 細線 */
+            1px 16px,  /* $7 細線 */
+            1px 16px,  /* $8 細線 */
+            1px 16px,  /* $9 細線 */
+            1px 16px,  /* $11 細線 */
+            1px 16px,  /* $12 細線 */
+            1px 16px,  /* $13 細線 */
+            1px 16px,  /* $14 細線 */
+            1px 16px,  /* $16 細線 */
+            1px 16px,  /* $17 細線 */
+            1px 16px,  /* $18 細線 */
+            1px 16px;  /* $19 細線 */
+        background-position: 
+            0% center,     /* $0 */
+            25% center,    /* $5 */
+            50% center,    /* $10 */
+            75% center,    /* $15 */
+            100% center,   /* $20 */
+            5% center,     /* $1 */
+            10% center,    /* $2 */
+            15% center,    /* $3 */
+            20% center,    /* $4 */
+            30% center,    /* $6 */
+            35% center,    /* $7 */
+            40% center,    /* $8 */
+            45% center,    /* $9 */
+            55% center,    /* $11 */
+            60% center,    /* $12 */
+            65% center,    /* $13 */
+            70% center,    /* $14 */
+            80% center,    /* $16 */
+            85% center,    /* $17 */
+            90% center,    /* $18 */
+            95% center;    /* $19 */
+        border-radius: 5px;
+    }
+    
+    input[type="range"]::-moz-range-track {
+        width: 100%;
+        height: 16px;
+        background-color: #ddd;
+        background-repeat: no-repeat;
+        background-image: 
+            /* 粗線 - $0 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $5 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $10 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $15 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 粗線 - $20 */
+            linear-gradient(to bottom, #000 0%, #000 100%),
+            /* 細線 - $1 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $2 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $3 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $4 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $6 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $7 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $8 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $9 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $11 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $12 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $13 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $14 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $16 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $17 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $18 */
+            linear-gradient(to bottom, #999 0%, #999 100%),
+            /* 細線 - $19 */
+            linear-gradient(to bottom, #999 0%, #999 100%);
+        background-size: 
+            3px 16px,  /* $0 粗線 */
+            3px 16px,  /* $5 粗線 */
+            3px 16px,  /* $10 粗線 */
+            3px 16px,  /* $15 粗線 */
+            3px 16px,  /* $20 粗線 */
+            1px 16px,  /* $1 細線 */
+            1px 16px,  /* $2 細線 */
+            1px 16px,  /* $3 細線 */
+            1px 16px,  /* $4 細線 */
+            1px 16px,  /* $6 細線 */
+            1px 16px,  /* $7 細線 */
+            1px 16px,  /* $8 細線 */
+            1px 16px,  /* $9 細線 */
+            1px 16px,  /* $11 細線 */
+            1px 16px,  /* $12 細線 */
+            1px 16px,  /* $13 細線 */
+            1px 16px,  /* $14 細線 */
+            1px 16px,  /* $16 細線 */
+            1px 16px,  /* $17 細線 */
+            1px 16px,  /* $18 細線 */
+            1px 16px;  /* $19 細線 */
+        background-position: 
+            2% center,     /* $0 */
+            27% center,    /* $5 */
+            52% center,    /* $10 */
+            77% center,    /* $15 */
+            102% center,   /* $20 - 會被裁切但不影響視覺 */
+            7% center,     /* $1 */
+            12% center,    /* $2 */
+            17% center,    /* $3 */
+            22% center,    /* $4 */
+            32% center,    /* $6 */
+            37% center,    /* $7 */
+            42% center,    /* $8 */
+            47% center,    /* $9 */
+            57% center,    /* $11 */
+            62% center,    /* $12 */
+            67% center,    /* $13 */
+            72% center,    /* $14 */
+            82% center,    /* $16 */
+            87% center,    /* $17 */
+            92% center,    /* $18 */
+            97% center;    /* $19 */
+        border-radius: 5px;
+    }
+    
+    /* 整體內文的預設字體大小 */
+    .main-wrapper {
+        font-size: 18px;
+        text-align: left;
+        line-height: 1.6;
+        font-family: 'Times New Roman', serif;
+    }
+
+    /* 區塊標題 h3 字體大小 */
+    .main-section-title {
+        font-size: 26px;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 0;
+    }
+
+    /* 小標題 h4 字體大小 */
+    .main-subtitle {
+        font-size: 30px;
+        font-weight: normal;
+    }
+
+    /* 一般段落文字 */
+    .main-paragraph {
+        font-size: 20px;
+    }
+
+    /* 主要問題說明文字 */
+    .main-question-text {
+        font-size: 20px;
+    }
+
+    /* slider 下方刻度文字 */
+    .main-ticks {
+        font-size: 18px;
+    }
+
+    /* slider 目前數值顯示 */
+    .main-slider-display {
+        font-weight: normal;
+        font-size: 18px;
+    }
+
+    /* === 固定參考區域樣式 === */
+    .sticky-reference-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 400px;
+        height: 100vh;
+        max-height: 100vh;
+        background: white;
+        border-right: 3px solid #007bff;
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+        overflow-y: auto;
+        z-index: 1000;
+        padding: 20px 25px;
+        transform: translateX(-100%);
+        opacity: 0;
+        transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 15px;
+        line-height: 1.7;
+        will-change: transform, opacity;
+        -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
+        scrollbar-width: thin; /* Firefox 滾動條 */
+        scrollbar-color: #888 #f1f1f1; /* Firefox 滾動條顏色 */
+        backface-visibility: hidden; /* 優化渲染性能 */
+        -webkit-backface-visibility: hidden;
+    }
+    
+    .sticky-reference-panel.active {
+        transform: translateX(0);
+        opacity: 1;
+        will-change: auto;
+    }
+    
+    /* 垂直佈局容器 */
+    .sticky-reference-content {
+        display: flex;
+        flex-direction: column;
+        gap: 35px;
+    }
+    
+    .sticky-reference-column {
+        width: 100%;
+    }
+    
+    /* 為主內容區域添加左側邊距，避免被固定面板遮擋 */
+    .content-wrapper {
+        transform: translateX(0);
+        transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+        backface-visibility: hidden; /* 優化渲染性能 */
+        -webkit-backface-visibility: hidden;
+    }
+    
+    /* 調整固定參考區域的寬度 */
+    .content-wrapper.panel-active {
+        transform: translateX(170px); /* 面板寬度(400px) + 間距(30px) */
+        will-change: auto;
+    }
+    
+    .sticky-reference-panel h4 {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #007bff;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 6px;
+    }
+    
+    .sticky-reference-panel h5 {
+        font-size: 17px;
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .sticky-reference-panel p {
+        margin-bottom: 12px;
+        font-size: 16px; 
+    }
+    
+    .sticky-reference-panel ul {
+        margin: 10px 0;
+        padding-left: 25px;
+        font-size: 15px; 
+    }
+    
+    .sticky-reference-panel li {
+        margin-bottom: 8px;
+    }
+    
+    /* 自訂滾動條樣式 */
+    .sticky-reference-panel::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .sticky-reference-panel::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .sticky-reference-panel::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+        transition: background 0.2s ease;
+    }
+    
+    .sticky-reference-panel::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{{ endblock }}
+
+{{ block content }}
+
+<!-- 固定參考面板 -->
+<div id="sticky-panel" class="sticky-reference-panel">
+    <div class="sticky-reference-content">
+        <div class="sticky-reference-column">
+            <h4>📌 RECAP</h4>
+            <p>
+                PhoneMaker's latest phones use NextGen's standard essential patent - 6G technology. During negotiations,
+                PhoneMaker and NextGen failed to agree on the "fair, reasonable, and non-discriminatory" (FRAND) rate:
+                NextGen requested $15 per phone and PhoneMaker proposed paying NextGen $1.5 per phone sold. They sued each other.
+            </p>
+        </div>
+        
+        <div class="sticky-reference-column">
+            <h4>📋 JURY INSTRUCTIONS</h4>
+            <p>When deciding on the FRAND rate, consider the following legally relevant factors:</p>
+            <div id="sticky-instructions-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 內容包裝器，用於移動整個頁面內容 -->
+<div class="content-wrapper">
+    <div id="main-study-warning" class="main-study-warning">
+        ⚠ Please answer all questions before proceeding.
+    </div>
+
+    <div class="main-wrapper">
+    
+    <!-- ===== Section 1: Recap ===== -->
+    <div style="margin-bottom: 40px;">
+        <h3 class="main-section-title">RECAP</h3>
+        <p class="main-paragraph">
+            PhoneMaker’s latest phones use NextGen’s standard essential patent - 6G technology. During negotiations, PhoneMaker and NextGen failed to agree on the "fair, reasonable, and non-discriminatory" (FRAND) rate: NextGen requested $15 per phone and PhoneMaker proposed paying NextGen $1.5 per phone sold. They sued each other. 
+            In addition, NextGen also sued PhoneMaker in Germany. German judges ruled in NextGen’s favor, ordering PhoneMaker to stop its 6G phone sale in Germany.
+        </p>
+    </div>
+
+    <br><br>
+
+    <!-- ===== Section 2: Court Order ===== -->
+    <div style="margin-bottom: 40px;">
+        <h3 class="main-section-title">COURT ORDER</h3>
+        <p class="main-paragraph">
+            You have been selected as a juror to help the United States court determine the FRAND rate.
+            FRAND terms require the royalty to be fair and reasonable to both the patent holder (NextGen) and the licensee (PhoneMaker).
+        </p>
+        <p class="main-paragraph">
+            Please carefully review the jury instructions below, and apply them to evaluate the evidence presented by both sides.
+        </p>
+        <p class="main-paragraph">
+    
+</p>
+
+    </div>
+
+    <br><br>
+
+    <!-- ===== Section 3: Jury Instructions ===== -->
+    <div id="instructions-section">
+        <h3 class="main-section-title">JURY INSTRUCTIONS</h3>
+        
+        {% if inst == 0 %}
+        <!-- Simple Instructions (3 factors) -->
+        <p class="main-paragraph" style="text-align: center; font-weight: bold;"> </p>
+        <p class="main-paragraph">When deciding on the FRAND rate, consider the following legally relevant factors:</p>
+        
+        <div style="margin-left: 20px;">
+            <ul class="main-paragraph">
+                <li>F1 How much the patented invention adds to the value of the product using it.</li>
+                <li>F2 Value only from the patented invention, excluding other product features/parts not covered by the invention.</li>
+                <li>F3 Similar license agreements, especially those for the same or similar technology in similar situations.</li>
+            </ul>
+        </div>
+        
+        {% else %}
+        <!-- Complex Instructions (8 factors) -->
+        <p class="main-paragraph" style="text-align: center; font-weight: bold;"> </p>
+        <p class="main-paragraph">When deciding on the FRAND rate, consider the following legally relevant factors:</p>
+        
+        <div style="margin-left: 20px;">
+            <ul class="main-paragraph">
+                <li>F1 What the patent owner has charged others for using the same patent in similar situations.</li>
+                <li>F2 The rates paid by the patent user for the use of other patents comparable to the patent in suit.</li>
+                <li>F3 Whether using the patent also helps sell other related products, either for the user or the patent owner.</li>
+                <li>F4 How the company actually used the patent and how much value it added—again, don’t count extra value just because it’s in a standard.</li>
+                <li>F5 What royalty rates are typical in this industry for similar inventions.</li>
+                <li>F6 How much of the product’s success comes from the patented part, versus other things like marketing, design, or added features.</li>
+                <li>F7 What experts say is a fair royalty rate in this case.</li>
+                <li>F8 What royalty a reasonable buyer and seller would have agreed on when the use started, assuming both were negotiating fairly and honestly. This includes the value to the user and any other licenses they might have needed.</li>
+                
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <br><br>
+    <br><br>
+
+    <!-- ===== Section 4: Evidence ===== -->
+    <div id="evidence-wrapper" style="margin-bottom: 40px;">
+        <h3 class="main-section-title">EVIDENCE</h3>
+        <p class="main-paragraph">
+            The two sides' expert witnesses have provided evidence in support of their calculations of FRAND.
+            NextGen's expert witness submitted (E1) - (E4) in support of its proposed FRAND rate of $15 per device and
+            PhoneMaker's expert witness submitted (E5) - (E8) in support of its proposed FRAND rate of $1.5 per device.
+        </p>
+
+        <br><br>
+
+        <p class="main-paragraph">
+            Based on the jury instructions above, check all evidence items that are legally relevant in determining the FRAND rate. 
+            The use of the Internet or generative-AI tools is strictly prohibited.
+        </p>
+        
+        <div id="evidence-section" style="margin-left: 20px;">
+            {{ formfield 'evidence_e1' }}
+            {{ formfield 'evidence_e2' }}
+            {{ formfield 'evidence_e3' }}
+            {{ formfield 'evidence_e4' }}
+            {{ formfield 'evidence_e5' }}
+            {{ formfield 'evidence_e6' }}
+            {{ formfield 'evidence_e7' }}
+            {{ formfield 'evidence_e8' }}
+        </div>
+    </div>
+
+<div style="margin-bottom: 40px; border-top: 2px solid #ccc; padding-top: 20px;">
+    
+    <!-- ===== Section 6: FRAND Rate Evaluation ===== -->
+        <h3 class="main-section-title"></h3>
+        
+        <div id="frand-rate-0-section" style="margin-bottom: 30px;">
+            <h4 class="main-subtitle"> </h4>
+            <p class="main-question-text">
+                Based on your evaluation of the evidence above and the jury instructions, 
+                what is the most appropriate FRAND rate ($ per device)?
+            </p>
+            
+            <div class="slider-container" style="margin: 20px 0;">
+                <!-- 刻度標籤 -->
+                <div class="slider-ticks main-ticks">
+                    <span></span>
+                    <span>$5</span>
+                    <span></span>
+                    <span>$15</span>
+                    <span></span>
+                </div>
+                
+                {{ formfield 'frand_rate_1' }}
+                
+                <!-- 隱藏的歷史紀錄欄位 -->
+                <div style="display: none;">
+                    {{ formfield 'frand_rate_1_history' }}
+                </div>
+            </div>
+        </div>
+
+        <div id="frand-rate-2-section" style="margin-bottom: 30px;">
+            <h4 class="main-subtitle"></h4>
+            <p class="main-question-text">
+                Which FRAND rate do you think most participants will consider as the most appropriate FRAND rate ($ per device)? 
+                We will pay a bonus of $5 to ten of the closest answers for every one hundred participants.
+            </p>
+            
+            <div class="slider-container" style="margin: 20px 0;">
+                <!-- 刻度標籤 -->
+                <div class="slider-ticks main-ticks">
+                    <span></span>
+                    <span>$5</span>
+                    <span></span>
+                    <span>$15</span>
+                    <span></span>
+                </div>
+                
+                {{ formfield 'frand_rate_2' }}
+                
+                <!-- 隱藏的歷史紀錄欄位 -->
+                <div style="display: none;">
+                    {{ formfield 'frand_rate_2_history' }}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 40px; border-top: 2px solid #ccc; padding-top: 20px;">
+             <div id="nextgen-section" style="margin-left: 20px;">
+                <p class="main-question-text">Did Nextgen negotiate the FRAND rate fairly?</p>
+                {{ formfield 'negotiate_fairly_nextgen' }}
+            </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <div id="phonemaker-section" style="margin-left: 20px;">
+                <p class="main-question-text">Did Phonemaker negotiate the FRAND rate fairly?</p>
+                {{ formfield 'negotiate_fairly_phonemaker' }}
+                <br>
+                <div style="display: flex; justify-content: flex-start;">
+                    {{ next_button }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 卡片點擊功能：點擊卡片內任意位置都能選中 radio button
+    document.querySelectorAll('.form-check').forEach(function(card) {
+        card.addEventListener('click', function(e) {
+            // 如果點擊的不是 radio button 或 label，則手動觸發 radio button
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                const radio = card.querySelector('input[type="radio"]');
+                if (radio && !radio.checked) {
+                    radio.checked = true;
+                    // 觸發 change 事件以確保所有監聽器都能收到通知
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        });
+    });
+    
+    // 離散步進設定（每$0.1一個步進點）
+    const STEP_SIZE = 0.1;
+    
+    // 對齊到最近的步進點
+    function snapToStep(value) {
+        return Math.round(value / STEP_SIZE) * STEP_SIZE;
+    }
+    
+    // === Slider 1: frand_rate_1 ===
+    const numberInput0 = document.querySelector('input[name="frand_rate_1"]');
+    const historyInput0 = document.querySelector('textarea[name="frand_rate_1_history"]');
+    
+    if (numberInput0) {
+        // 創建wrapper和tooltip
+        const wrapper0 = document.createElement('div');
+        wrapper0.className = 'slider-wrapper';
+        
+        const tooltip0 = document.createElement('div');
+        tooltip0.className = 'slider-tooltip';
+        tooltip0.textContent = '$0.0';
+        
+        const slider0 = document.createElement('input');
+        slider0.type = 'range';
+        slider0.min = '0';
+        slider0.max = '20';
+        slider0.step = String(STEP_SIZE);
+        slider0.setAttribute('list', 'tickmarks0');
+        slider0.style.width = '100%';
+        slider0.style.margin = '0';
+        slider0.style.padding = '0';
+        slider0.style.cursor = 'pointer';
+        slider0.style.transition = 'all 0.1s ease';
+        
+        // 創建格線標記
+        const datalist0 = document.createElement('datalist');
+        datalist0.id = 'tickmarks0';
+        const tickValues = [5, 10, 15];
+        tickValues.forEach(function(val) {
+            const option = document.createElement('option');
+            option.value = val;
+            datalist0.appendChild(option);
+        });
+        
+        const display0 = document.getElementById('slider-value-display-frand0');
+        
+        // 更新tooltip位置的函數
+        function updateTooltipPosition0(value) {
+            const min = parseFloat(slider0.min);
+            const max = parseFloat(slider0.max);
+            const thumbWidth = 20;
+            const trackWidth = slider0.offsetWidth;
+            
+            const percent = (value - min) / (max - min);
+            const offset = thumbWidth / 2;
+            const availableWidth = trackWidth - thumbWidth;
+            const pixelPosition = offset + (percent * availableWidth);
+            
+            tooltip0.style.left = pixelPosition + 'px';
+            tooltip0.textContent = '$' + value.toFixed(1);
+        }
+        
+        // 初始化記錄變量
+        let record0 = '';
+        let lastValue0 = '';
+        let isFirstInteraction0 = true;
+        let isDragging0 = false;
+        
+        if (numberInput0.value && numberInput0.value.trim() !== '') {
+            const snappedValue = snapToStep(parseFloat(numberInput0.value));
+            slider0.value = snappedValue;
+            if (display0) display0.textContent = '$' + snappedValue.toFixed(1);
+            updateTooltipPosition0(snappedValue);
+            record0 = snappedValue.toFixed(1);
+            lastValue0 = record0;
+            if (historyInput0) {
+                historyInput0.value = record0;
+            }
+            isFirstInteraction0 = false;
+        } else {
+            slider0.value = '0';
+            if (display0) display0.textContent = '';
+            numberInput0.value = '';
+            updateTooltipPosition0(0);
+            if (historyInput0) {
+                historyInput0.value = '';
+            }
+        }
+
+        // Slider 開始拖動
+        slider0.onmousedown = function() {
+            isDragging0 = true;
+            tooltip0.classList.add('dragging');
+        };
+        
+        slider0.ontouchstart = function() {
+            isDragging0 = true;
+            tooltip0.classList.add('dragging');
+        };
+
+        // Slider 拉動中（即時更新顯示）
+        slider0.oninput = function() {
+            const rawValue = parseFloat(this.value);
+            const snappedValue = snapToStep(rawValue);
+            const displayValue = snappedValue.toFixed(1);
+            
+            updateTooltipPosition0(snappedValue);
+            
+            if (display0) {
+                display0.textContent = '$' + displayValue;
+                display0.style.fontWeight = 'normal';
+                display0.style.color = '#007bff';
+            }
+        };
+        
+        // Slider 釋放時（對齊並記錄）
+        slider0.onchange = function() {
+            const snappedValue = snapToStep(parseFloat(this.value));
+            this.value = snappedValue;
+            const value = snappedValue.toFixed(1);
+            
+            updateTooltipPosition0(snappedValue);
+            tooltip0.classList.remove('dragging');
+            
+            if (display0) {
+                display0.textContent = '$' + value;
+                display0.style.fontWeight = 'normal';
+                display0.style.color = 'inherit';
+            }
+            numberInput0.value = value;
+            
+            if (value !== lastValue0) {
+                if (isFirstInteraction0) {
+                    record0 = value;
+                    isFirstInteraction0 = false;
+                } else {
+                    record0 += ',' + value;
+                }
+                if (historyInput0) {
+                    historyInput0.value = record0;
+                }
+                lastValue0 = value;
+            }
+            
+            isDragging0 = false;
+            numberInput0.setCustomValidity('');
+        };
+        
+        slider0.onmouseup = function() {
+            if (isDragging0) {
+                this.onchange();
+            }
+        };
+        
+        slider0.ontouchend = function() {
+            if (isDragging0) {
+                this.onchange();
+            }
+        };
+        
+        // 組裝元素
+        wrapper0.appendChild(tooltip0);
+        wrapper0.appendChild(slider0);
+        wrapper0.appendChild(datalist0);
+        
+        numberInput0.style.display = 'none';
+        numberInput0.parentNode.insertBefore(wrapper0, numberInput0.nextSibling);
+    }
+
+    // === Slider 2: frand_rate_2 ===
+    const numberInput2 = document.querySelector('input[name="frand_rate_2"]');
+    const historyInput2 = document.querySelector('textarea[name="frand_rate_2_history"]');
+    
+    if (numberInput2) {
+        // 創建wrapper和tooltip
+        const wrapper2 = document.createElement('div');
+        wrapper2.className = 'slider-wrapper';
+        
+        const tooltip2 = document.createElement('div');
+        tooltip2.className = 'slider-tooltip';
+        tooltip2.textContent = '$0.0';
+        
+        const slider2 = document.createElement('input');
+        slider2.type = 'range';
+        slider2.min = '0';
+        slider2.max = '20';
+        slider2.step = String(STEP_SIZE);
+        slider2.setAttribute('list', 'tickmarks2');
+        slider2.style.width = '100%';
+        slider2.style.margin = '0';
+        slider2.style.padding = '0';
+        slider2.style.cursor = 'pointer';
+        slider2.style.transition = 'all 0.1s ease';
+        
+        // 創建格線標記
+        const datalist2 = document.createElement('datalist');
+        datalist2.id = 'tickmarks2';
+        const tickValues = [5, 10, 15];
+        tickValues.forEach(function(val) {
+            const option = document.createElement('option');
+            option.value = val;
+            datalist2.appendChild(option);
+        });
+        
+        const display2 = document.getElementById('slider-value-display-frand2');
+        
+        // 更新tooltip位置的函數
+        function updateTooltipPosition2(value) {
+            const min = parseFloat(slider2.min);
+            const max = parseFloat(slider2.max);
+            const thumbWidth = 20;
+            const trackWidth = slider2.offsetWidth;
+            
+            const percent = (value - min) / (max - min);
+            const offset = thumbWidth / 2;
+            const availableWidth = trackWidth - thumbWidth;
+            const pixelPosition = offset + (percent * availableWidth);
+            
+            tooltip2.style.left = pixelPosition + 'px';
+            tooltip2.textContent = '$' + value.toFixed(1);
+        }
+        
+        // 初始化記錄變量
+        let record2 = '';
+        let lastValue2 = '';
+        let isFirstInteraction2 = true;
+        let isDragging2 = false;
+        
+        if (numberInput2.value && numberInput2.value.trim() !== '') {
+            const snappedValue = snapToStep(parseFloat(numberInput2.value));
+            slider2.value = snappedValue;
+            if (display2) display2.textContent = '$' + snappedValue.toFixed(1);
+            updateTooltipPosition2(snappedValue);
+            record2 = snappedValue.toFixed(1);
+            lastValue2 = record2;
+            if (historyInput2) {
+                historyInput2.value = record2;
+            }
+            isFirstInteraction2 = false;
+        } else {
+            slider2.value = '0';
+            if (display2) display2.textContent = '';
+            numberInput2.value = '';
+            updateTooltipPosition2(0);
+            if (historyInput2) {
+                historyInput2.value = '';
+            }
+        }
+
+        // Slider 開始拖動
+        slider2.onmousedown = function() {
+            isDragging2 = true;
+            tooltip2.classList.add('dragging');
+        };
+        
+        slider2.ontouchstart = function() {
+            isDragging2 = true;
+            tooltip2.classList.add('dragging');
+        };
+
+        // Slider 拉動中（即時更新顯示）
+        slider2.oninput = function() {
+            const rawValue = parseFloat(this.value);
+            const snappedValue = snapToStep(rawValue);
+            const displayValue = snappedValue.toFixed(1);
+            
+            updateTooltipPosition2(snappedValue);
+            
+            if (display2) {
+                display2.textContent = '$' + displayValue;
+                display2.style.fontWeight = 'normal';
+                display2.style.color = '#007bff';
+            }
+        };
+        
+        // Slider 釋放時（對齊並記錄）
+        slider2.onchange = function() {
+            const snappedValue = snapToStep(parseFloat(this.value));
+            this.value = snappedValue;
+            const value = snappedValue.toFixed(1);
+            
+            updateTooltipPosition2(snappedValue);
+            tooltip2.classList.remove('dragging');
+            
+            if (display2) {
+                display2.textContent = '$' + value;
+                display2.style.fontWeight = 'normal';
+                display2.style.color = 'inherit';
+            }
+            numberInput2.value = value;
+            
+            if (value !== lastValue2) {
+                if (isFirstInteraction2) {
+                    record2 = value;
+                    isFirstInteraction2 = false;
+                } else {
+                    record2 += ',' + value;
+                }
+                if (historyInput2) {
+                    historyInput2.value = record2;
+                }
+                lastValue2 = value;
+            }
+            
+            isDragging2 = false;
+            numberInput2.setCustomValidity('');
+        };
+        
+        slider2.onmouseup = function() {
+            if (isDragging2) {
+                this.onchange();
+            }
+        };
+        
+        slider2.ontouchend = function() {
+            if (isDragging2) {
+                this.onchange();
+            }
+        };
+        
+        // 組裝元素
+        wrapper2.appendChild(tooltip2);
+        wrapper2.appendChild(slider2);
+        wrapper2.appendChild(datalist2);
+        
+        numberInput2.style.display = 'none';
+        numberInput2.parentNode.insertBefore(wrapper2, numberInput2.nextSibling);
+    }
+    
+    // ===== 表單驗證邏輯 =====
+    const form = document.querySelector('form');
+    const warning = document.getElementById('main-study-warning');
+    
+    if (form) {
+        // 完全禁用 HTML5 原生驗證
+        form.setAttribute('novalidate', 'novalidate');
+        form.noValidate = true;
+        
+        // 移除所有輸入欄位的 required 屬性並清除自定義驗證訊息
+        form.querySelectorAll('input, textarea, select').forEach(function(input) {
+            input.removeAttribute('required');
+            input.setCustomValidity(''); // 清除任何自定義驗證訊息
+        });
+        
+        // 表單提交驗證（使用捕獲階段確保最先執行）
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            let firstErrorField = null;
+            const errors = [];
+            
+            // 先移除所有錯誤樣式
+            document.querySelectorAll('.question-error').forEach(function(el) {
+                el.classList.remove('question-error');
+            });
+            
+            // 隱藏警告訊息
+            if (warning) {
+                warning.classList.remove('show');
+                warning.style.display = 'none';
+            }
+            
+            // 1. 檢查證據題 (E1-E8) - 每個都必須選擇
+            const evidenceFields = ['evidence_e1', 'evidence_e2', 'evidence_e3', 'evidence_e4',
+                                   'evidence_e5', 'evidence_e6', 'evidence_e7', 'evidence_e8'];
+            
+            evidenceFields.forEach(function(fieldName) {
+                const radios = document.querySelectorAll('input[name="' + fieldName + '"]');
+                const isChecked = Array.from(radios).some(function(r) { return r.checked; });
+                
+                if (!isChecked) {
+                    hasError = true;
+                    if (!errors.includes('evidence')) {
+                        errors.push('evidence');
+                    }
+                    
+                    // 為未選擇的證據項目添加錯誤樣式
+                    if (radios.length > 0) {
+                        const container = radios[0].closest('.form-group, .mb-3, .otree-form-group');
+                        if (!container) {
+                            // 如果沒有找到標準容器，找最近的 div 父元素
+                            const parentDiv = radios[0].closest('div');
+                            if (parentDiv) {
+                                parentDiv.classList.add('question-error');
+                            }
+                        } else {
+                            container.classList.add('question-error');
+                        }
+                        
+                        // 設置第一個錯誤欄位
+                        if (!firstErrorField) {
+                            firstErrorField = container || radios[0].closest('div');
+                        }
+                    }
+                }
+            });
+            
+            // 2. 檢查 FRAND rate 0 slider
+            if (!numberInput0 || !numberInput0.value || numberInput0.value.trim() === '') {
+                hasError = true;
+                errors.push('frand_rate_1');
+                const frandSection0 = document.getElementById('frand-rate-0-section');
+                if (frandSection0) {
+                    frandSection0.classList.add('question-error');
+                    if (!firstErrorField) firstErrorField = frandSection0;
+                }
+            }
+            
+            // 3. 檢查 FRAND rate 2 slider
+            if (!numberInput2 || !numberInput2.value || numberInput2.value.trim() === '') {
+                hasError = true;
+                errors.push('frand_rate_2');
+                const frandSection2 = document.getElementById('frand-rate-2-section');
+                if (frandSection2) {
+                    frandSection2.classList.add('question-error');
+                    if (!firstErrorField) firstErrorField = frandSection2;
+                }
+            }
+            
+            // 4. 檢查 negotiate_fairly_nextgen
+            const nextgenRadios = document.querySelectorAll('input[name="negotiate_fairly_nextgen"]');
+            const nextgenChecked = Array.from(nextgenRadios).some(function(r) { return r.checked; });
+            if (!nextgenChecked) {
+                hasError = true;
+                errors.push('negotiate_fairly_nextgen');
+                const nextgenSection = document.getElementById('nextgen-section');
+                if (nextgenSection) {
+                    nextgenSection.classList.add('question-error');
+                    if (!firstErrorField) firstErrorField = nextgenSection;
+                }
+            }
+            
+            // 5. 檢查 negotiate_fairly_phonemaker
+            const phonemakerRadios = document.querySelectorAll('input[name="negotiate_fairly_phonemaker"]');
+            const phonemakerChecked = Array.from(phonemakerRadios).some(function(r) { return r.checked; });
+            if (!phonemakerChecked) {
+                hasError = true;
+                errors.push('negotiate_fairly_phonemaker');
+                const phonemakerSection = document.getElementById('phonemaker-section');
+                if (phonemakerSection) {
+                    phonemakerSection.classList.add('question-error');
+                    if (!firstErrorField) firstErrorField = phonemakerSection;
+                }
+            }
+            
+            // 如果有錯誤，阻止提交並顯示警告
+            if (hasError) {
+                console.log('發現未填寫欄位:', errors);
+                
+                // 完全阻止表單提交
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // 清除所有欄位的驗證訊息，確保不顯示 "This field is required."
+                form.querySelectorAll('input, textarea, select').forEach(function(input) {
+                    input.setCustomValidity('');
+                });
+                
+                // 顯示警告訊息
+                if (warning) {
+                    warning.classList.add('show');
+                    warning.style.display = 'block';
+                }
+                
+                // 捲動到第一個錯誤的題目
+                if (firstErrorField) {
+                    setTimeout(function() {
+                        const yOffset = -100; // 頁面頂部留 100px 空間
+                        const y = firstErrorField.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                    }, 150);
+                }
+                
+                return false;
+            } else {
+                // 如果沒有錯誤，確保清除所有驗證訊息
+                form.querySelectorAll('input, textarea, select').forEach(function(input) {
+                    input.setCustomValidity('');
+                });
+            }
+        }, true); // 使用捕獲階段確保優先執行
+        
+        // 當用戶填寫任何欄位時，檢查是否所有欄位都已填寫
+        function checkAllFilled() {
+            const evidenceFields = ['evidence_e1', 'evidence_e2', 'evidence_e3', 'evidence_e4',
+                                   'evidence_e5', 'evidence_e6', 'evidence_e7', 'evidence_e8'];
+            
+            // 檢查每個證據項目是否都已選擇
+            const allEvidenceFilled = evidenceFields.every(function(name) {
+                const radios = document.querySelectorAll('input[name="' + name + '"]');
+                return Array.from(radios).some(function(r) { return r.checked; });
+            });
+            
+            const nextgenRadios = document.querySelectorAll('input[name="negotiate_fairly_nextgen"]');
+            const nextgenChecked = Array.from(nextgenRadios).some(function(r) { return r.checked; });
+            
+            const phonemakerRadios = document.querySelectorAll('input[name="negotiate_fairly_phonemaker"]');
+            const phonemakerChecked = Array.from(phonemakerRadios).some(function(r) { return r.checked; });
+            
+            const slider0Filled = numberInput0 && numberInput0.value && numberInput0.value.trim() !== '';
+            const slider2Filled = numberInput2 && numberInput2.value && numberInput2.value.trim() !== '';
+            
+            if (allEvidenceFilled && slider0Filled && slider2Filled && nextgenChecked && phonemakerChecked) {
+                if (warning) {
+                    warning.classList.remove('show');
+                    warning.style.display = 'none';
+                }
+            }
+        }
+        
+        // 監聽所有輸入變化
+        form.addEventListener('change', function(e) {
+            const target = e.target;
+            
+            // 如果是證據 radio button 被改變
+            if (target && target.type === 'radio' && target.name && target.name.startsWith('evidence_')) {
+                // 移除該證據項目的錯誤樣式
+                const container = target.closest('.question-error');
+                if (container) {
+                    container.classList.remove('question-error');
+                }
+            } else {
+                // 其他欄位：移除該欄位的錯誤樣式
+                if (target) {
+                    const container = target.closest('.question-error');
+                    if (container) {
+                        container.classList.remove('question-error');
+                    }
+                }
+            }
+            checkAllFilled();
+        });
+        
+        // 監聽 slider 輸入
+        form.addEventListener('input', function(e) {
+            if (e.target.name === 'frand_rate_1' || e.target.name === 'frand_rate_2') {
+                const container = e.target.closest('.question-error');
+                if (container) {
+                    container.classList.remove('question-error');
+                }
+                checkAllFilled();
+            }
+        });
+    }
+});
+
+// ===== 固定參考面板邏輯 =====
+document.addEventListener('DOMContentLoaded', function() {
+    const stickyPanel = document.getElementById('sticky-panel');
+    const evidenceSection = document.getElementById('evidence-section');
+    const instructionsSection = document.getElementById('instructions-section');
+    const stickyInstructionsContent = document.getElementById('sticky-instructions-content');
+    
+    if (stickyPanel && evidenceSection && instructionsSection) {
+        // 複製 JURY INSTRUCTIONS 的內容到固定面板
+        const instructionsContent = instructionsSection.querySelector('div[style*="margin-left"]');
+        if (instructionsContent) {
+            stickyInstructionsContent.innerHTML = instructionsContent.innerHTML;
+        }
+        
+        // 獲取主內容區域
+        const contentWrapper = document.querySelector('.content-wrapper');
+        
+        // 監聽滾動事件（使用 requestAnimationFrame 優化性能）
+        let isSticky = false;
+        let ticking = false;
+        const hysteresis = 50; // 遲滯值，避免頻繁切換
+        
+        function updateStickyPanel() {
+            const evidenceRect = evidenceSection.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            // 當 EVIDENCE 區域更接近視窗中心時才顯示面板
+            const shouldShow = evidenceRect.top < windowHeight - 500; // 調整左側區塊顯示時機
+
+            // 使用遲滯機制，避免在邊界附近頻繁切換
+            if (shouldShow && !isSticky) {
+                // 使用 requestAnimationFrame 確保動畫同步
+                requestAnimationFrame(function() {
+                    stickyPanel.classList.add('active');
+                    if (contentWrapper) {
+                        contentWrapper.classList.add('panel-active');
+                    }
+                });
+                isSticky = true;
+            } 
+            else if (!shouldShow && evidenceRect.top > (windowHeight - 450 + hysteresis) && isSticky) {
+                requestAnimationFrame(function() {
+                    stickyPanel.classList.remove('active');
+                    if (contentWrapper) {
+                        contentWrapper.classList.remove('panel-active');
+                    }
+                });
+                isSticky = false;
+            }
+            
+            ticking = false;
+        }
+        
+        // 使用 passive listener 優化滾動性能
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(updateStickyPanel);
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+});
+</script>
+
+</div>
+</div>
+<!-- 結束內容包裝器 -->
+
+{{ endblock }}

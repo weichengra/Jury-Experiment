@@ -1,0 +1,361 @@
+{{ extends "global/Page.html" }}
+{{ block title }}{{ endblock }}
+
+{{ block content }}
+
+<div id="comprehension-warning" class="comprehension-warning">
+    ⚠ Please answer all questions before continuing.
+</div>
+
+<style>
+    body {
+        font-family: 'Times New Roman', serif;
+    }
+
+    /* 頁面主標題（Screen 3-1...） */
+    .block9-title {
+        font-family: 'Times New Roman', serif;
+        font-size: 30px;      /* 改這裡調整主標題大小 */
+        font-weight: bold;
+         text-align: center;   /* 新增：讓標題置中 */
+    }
+
+    /* 內文段落 */
+    .block9-text {
+        font-family: 'Times New Roman', serif;
+        font-size: 20px;      /* 改這裡調整一般文字大小 */
+    }
+
+    /* 警告框文字 */
+    .block9-warning {
+        font-family: 'Times New Roman', serif;
+        font-size: 16px;      /* 改這裡調整警告文字大小 */
+    }
+
+    /* Comprehension Questions 小標題 */
+    .block9-subtitle {
+        font-family: 'Times New Roman', serif;
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    /* 題目之間的間距 - 使用更強制的選擇器 */
+    .form-group {
+        margin-bottom: 120px !important;   /* 題目之間隔100px */
+    }
+    
+    /* 針對oTree的欄位容器 */
+    .field {
+        margin-bottom: 100px !important;   /* 題目之間隔100px */
+    }
+    
+    /* 針對包含問題的div */
+    div[id^="id_comprehension_q"] {
+        margin-bottom: 100px !important;
+    }
+
+    /* 問題標籤（題目文字）的字體大小 - 使用多個選擇器確保覆蓋 */
+    .control-label,
+    .form-group > label,
+    .form-group label,
+    label[for^="id_comprehension"],
+    .otree-form-group label,
+    .field > label {
+        font-family: 'Times New Roman', serif !important;
+        font-size: 20px !important;      /* 問題標題字體大小 */
+        font-weight: normal !important;  /* 不使用粗體 */
+        line-height: 1.6 !important;
+        margin-bottom: 15px !important;
+        display: block !important;
+    }
+    
+    /* 確保卡片內的選項文字不受上面規則影響 */
+    .form-check label {
+        font-size: 18px !important;        /* 選項文字大小維持 18px */
+        font-weight: 500 !important;
+        display: inline !important;
+    }
+    
+    /* 大卡片式按鈕設計 */
+    .form-check {
+        border: 3px solid #ddd;
+        padding: 25px 30px;
+        border-radius: 12px;
+        margin-bottom: 40px !important;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #fff;
+        position: relative;
+    }
+    
+    .form-check:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    }
+    
+    .form-check label {
+        cursor: pointer;
+        font-size: 18px;        /* 選項文字大小（從 16px 調整為 18px）*/
+        margin: 0;
+        padding-left: 10px;
+        font-weight: 500;
+        color: #333;
+        transition: color 0.3s ease;
+        line-height: 1.6;
+    }
+    
+    .form-check input[type="radio"] {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        margin-right: 12px;
+        vertical-align: middle;
+    }
+    
+    /* 選中狀態的卡片樣式 */
+    .form-check:has(input:checked) {
+        border-color: #007bff;
+        background-color: #e7f3ff;
+        box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
+    }
+    
+    .form-check input:checked ~ label {
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    /* 調整選項文字與按鈕的對齊 */
+    .form-check-input {
+        margin-top: 0.25rem;
+    }
+    
+    /* 選項文字行高 */
+    .form-check-label {
+        line-height: 1.6;
+        padding-left: 8px;
+    }
+    
+    /* 未填寫題目的紅色邊框樣式 */
+    .question-error {
+        border: 2px solid #dc3545 !important;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #fff5f5;
+    }
+    
+    /* 警告訊息樣式 */
+    .comprehension-warning {
+        font-family: 'Times New Roman', serif;
+        font-size: 18px;
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin: 20px 0;
+        display: none;
+        font-weight: bold;
+    }
+    
+    .comprehension-warning.show {
+        display: block;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 卡片點擊功能：點擊卡片內任意位置都能選中 radio button
+    document.querySelectorAll('.form-check').forEach(function(card) {
+        card.addEventListener('click', function(e) {
+            // 如果點擊的不是 radio button 或 label，則手動觸發 radio button
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                const radio = card.querySelector('input[type="radio"]');
+                if (radio && !radio.checked) {
+                    radio.checked = true;
+                    // 觸發 change 事件以確保所有監聽器都能收到通知
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        });
+    });
+});
+</script>
+
+<!-- Introduction 部分 -->
+<div style="margin-bottom: 30px;">
+    {{ if player.comprehension_attempts == 0 }}
+    <h2 class="block9-title">Introduction of Facts</h2>
+    {{ else }}
+    <h2 class="block9-title">Retake Introduction of Facts</h2>
+    {{ endif }}
+    <p class="block9-text">
+    
+</div>
+
+<p class="block9-text">
+    NextGen Corporation is a developer of cellular phone communication technology. 
+    In 2024, NextGen received industry-level recognition as the Standard Essential Patent (SEP) 
+    holder for 6G (6th generation wireless technology) standard.
+</p>
+
+<br><br>
+
+<p class="block9-text">
+    Adopting the same standard ensures compatibility across different devices. 
+    For NextGen, holding the SEP means that most manufacturers of future mobile devices 
+    such as smartphones will pay NextGen royalties to adopt its 6G standard. 
+    Recognition as the SEP holder, however, also requires that NextGen charge manufacturers 
+    adopting its technology a "fair, reasonable, and non-discriminatory" (FRAND) royalty rate 
+    to ensure that manufacturers have access to the standard without facing excessive pricing 
+    or unfair restrictions.
+</p>
+
+<br><br>
+
+<p class="block9-text">
+    PhoneMaker's latest phones sold on the market by using NextGen's 6G technology. 
+    During licensing negotiations, NextGen demanded a FRAND rate of $15 per cell phone sold. 
+    PhoneMaker rejected this rate, and filed a lawsuit against NextGen in a U.S. district court 
+    claiming that the $15 per device was breaching the FRAND terms and argued that $1.5 per device 
+    is a reasonable rate. In response, NextGen filed a lawsuit in the same court, accusing PhoneMaker 
+    of patent infringement and seeking damages from PhoneMaker.
+</p>
+
+<br><br>
+
+<p class="block9-text">
+    During court room discussion in the US, NextGen's lawyers mentioned a few times that in a similar lawsuit NextGen filed in Germany against PhoneMaker, 
+    a panel of three German judges already rendered a decision in favor of NextGen and granted an injunction -- a legal instrument that prohibits PhoneMaker from selling its 6G-enabled phones within Germany.
+</p>
+
+<p class="block9-warning" style="margin-top: 16px; padding: 12px; background-color: #f5f5f5; border-left: 4px solid #2196F3;">
+    <strong>Please answer all questions to the best of your ability using the information provided.</strong><br>
+    You must not search the internet or use generative AI to answer these questions. 
+    Failure to adhere to this requirement may disqualify you from receiving payments.
+</p>
+
+<br><br>
+<div style="margin-bottom: 40px; border-top: 2px solid #ccc; padding-top: 20px;"></div>
+
+<!-- 理解問題部分 -->
+<div style="margin-top: 30px;">
+    <h3 class="block9-subtitle">QUESTIONS</h3>
+    {{ formfields }}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const warning = document.getElementById('comprehension-warning');
+    
+    if (form) {
+        // 禁用 HTML5 原生驗證
+        form.setAttribute('novalidate', 'novalidate');
+        
+        // 移除所有輸入欄位的 required 屬性
+        form.querySelectorAll('input, textarea, select').forEach(function(input) {
+            input.removeAttribute('required');
+        });
+        
+        // 表單提交驗證
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            let firstErrorField = null;
+            
+            // 先移除所有錯誤樣式
+            document.querySelectorAll('.question-error').forEach(function(el) {
+                el.classList.remove('question-error');
+            });
+            
+            // 檢查所有 comprehension_q 開頭的 radio button 群組
+            const questionNames = new Set();
+            form.querySelectorAll('input[type="radio"]').forEach(function(input) {
+                if (input.name.startsWith('comprehension_q')) {
+                    questionNames.add(input.name);
+                }
+            });
+            
+            // 檢查每個問題是否有選擇
+            questionNames.forEach(function(name) {
+                const radios = form.querySelectorAll('input[type="radio"][name="' + name + '"]');
+                let hasSelection = false;
+                
+                radios.forEach(function(radio) {
+                    if (radio.checked) {
+                        hasSelection = true;
+                    }
+                });
+                
+                // 如果沒有選擇，標記錯誤
+                if (!hasSelection && radios.length > 0) {
+                    hasError = true;
+                    // 找到包含所有 radio buttons 的容器
+                    let container = radios[0].closest('.form-group');
+                    if (!container) container = radios[0].closest('.mb-3');
+                    if (!container) container = radios[0].closest('.otree-form-group');
+                    if (!container) container = radios[0].closest('.field');
+                    if (!container) container = radios[0].closest('div[id^="id_"]');
+                    if (!container) container = radios[0].parentElement;
+                    
+                    if (container) {
+                        container.classList.add('question-error');
+                        if (!firstErrorField) {
+                            firstErrorField = container;
+                        }
+                    }
+                }
+            });
+            
+            // 如果有錯誤，阻止提交並顯示警告
+            if (hasError) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // 顯示警告訊息
+                warning.classList.add('show');
+                warning.style.display = 'block';
+                
+                // 捲動到第一個錯誤的題目
+                if (firstErrorField) {
+                    setTimeout(function() {
+                        const yOffset = -120;
+                        const y = firstErrorField.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                    }, 100);
+                }
+                
+                return false;
+            }
+        }, true); // 使用捕獲階段
+        
+        // 當用戶選擇選項時,移除該題的錯誤樣式
+        form.addEventListener('change', function(e) {
+            const target = e.target;
+            if (target && target.type === 'radio' && target.name.startsWith('comprehension_q')) {
+                // 找到包含所有選項的容器
+                let container = target.closest('.question-error');
+                if (container) {
+                    container.classList.remove('question-error');
+                }
+                
+                // 檢查是否還有其他未填寫的題目
+                const hasAnyError = document.querySelector('.question-error');
+                if (!hasAnyError) {
+                    // 如果所有題目都已填寫，隱藏警告訊息
+                    warning.classList.remove('show');
+                    warning.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+</script>
+
+{{ next_button }}
+
+{{ endblock }}
+
